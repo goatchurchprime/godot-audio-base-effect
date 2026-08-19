@@ -43,7 +43,6 @@ void AudioEffectBase::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_audiosamplerate"), &AudioEffectBase::get_audiosamplerate);
 
     ADD_PROPERTY(PropertyInfo(Variant::INT, "audiosamplerate", PROPERTY_HINT_RANGE, "20,192000,1"), "set_audiosamplerate", "get_audiosamplerate");
-    ADD_PROPERTY(PropertyInfo(Variant::INT, "audiosamplesize", PROPERTY_HINT_RANGE, "10,4000,1"), "set_audiosamplesize", "get_audiosamplesize");
 
 }
 

@@ -17,7 +17,7 @@ EnsurePythonVersion(3, 8)  # type: ignore
 
 # Project config
 project_name = "BaseEffect"
-lib_name = "baseffect"
+lib_name = "baseeffect"
 default_output_dir = os.path.join("addons", "baseeffect", "libs")
 src_folder = "src"
 
