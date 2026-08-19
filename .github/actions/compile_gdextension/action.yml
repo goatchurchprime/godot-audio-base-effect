@@ -1,0 +1,136 @@
+name: Build GDExtension
+description: Build GDExtension library
+inputs:
+  platform:
+    description: Target platform (linux|macos|windows|android|ios|web)
+    required: true
+  target:
+    description: Compilation target (editor|template_release|template_debug)
+    required: true
+    default: "release"
+  arch:
+    description: Arch (universal|x86_32|x86_64|arm32|arm64|rv64|ppc32|ppc64|wasm32)
+    required: true
+    default: ""
+  artifact:
+    description: Artifact name. This name will be used for caching.
+    required: true
+    default: "bin"
+  additional:
+    description: Any additional arguments
+    default: ""
+  output_libs_path:
+    description: Path to compiled libraries
+    required: true
+    default: "bin"
+  use_cache:
+    description: Use cache
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Get godot-cpp SHA
+      shell: bash
+      id: get_godot_cpp_sha
+      run: |
+        echo "sha=$(git rev-parse @:./godot-cpp)" >> $GITHUB_OUTPUT
+
+    - name: Restore .scons_cache directory
+      if: inputs.use_cache != 'false'
+      id: restore_scons_cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{env.SCONS_CACHE}}
+        key: ${{github.job}}-${{inputs.artifact}}-${{steps.get_godot_cpp_sha.outputs.sha}}-${{github.ref}}-${{github.sha}}
+        restore-keys: |
+          ${{github.job}}-${{inputs.artifact}}-${{steps.get_godot_cpp_sha.outputs.sha}}-${{github.ref}}
+          ${{github.job}}-${{inputs.artifact}}-${{steps.get_godot_cpp_sha.outputs.sha}}
+
+    - name: Set up Python 3.x
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+        architecture: "x64"
+
+    - name: Configuring Python packages
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          python -m pip install pywin32
+        fi
+        python -m pip install scons
+        python --version
+        scons --version
+
+    - name: Linux dependencies
+      shell: bash
+      if: (runner.os == 'Linux')
+      run: |
+        sudo apt update
+        # sudo apt install ninja-build
+
+        if [[ "${{inputs.platform}}" == "linux" ]] && [[ "${{inputs.arch}}" == *"32" ]]; then
+          sudo apt install gcc-multilib g++-multilib
+        fi
+
+    - name: macOS dependencies
+      shell: bash
+      # Some time ago, macos runners got `ninja`` out of the box.
+      if: (runner.os == 'macOS') && false
+      run: |
+        brew install ninja
+
+    - name: Setup OVRLipSync
+      uses: ./.github/actions/setup_ovrlipsync
+      if: contains(inputs.additional, 'lipsync=yes')
+      with:
+        extract_directory: "addons/${{env.LIBRARY_NAME}}_lipsync"
+
+    - name: Build godot-cpp
+      shell: bash
+      run: |
+        echo "::group::🛠️ GDExtension Compilation 🛠️"
+        scons_params="platform=${{inputs.platform}} arch=${{inputs.arch}} target=${{inputs.target}} addon_output_dir=${{inputs.output_libs_path}} ${{inputs.additional}}"
+        
+        scons apply_patches
+        scons build_rnnoise $scons_params
+        scons build_opus $scons_params
+        scons $scons_params
+        echo "::endgroup::"
+
+    - name: Prepare artifact Unix
+      if: runner.os != 'Windows' && inputs.platform != 'android' && inputs.platform != 'web'
+      shell: bash
+      run: |
+        if [ "${{inputs.platform}}" == 'ios' ] || [ "${{inputs.platform}}" == 'macos' ]; then
+          found_files=$(find -L ${{inputs.output_libs_path}} -type f -iname "*.dylib")
+          echo "Found files: $found_files"
+          while IFS= read -r file; do
+              echo "Strip '$file'"
+              strip -u "$file"
+          done <<< "$found_files"
+        else
+          found_files=$(find -L ${{inputs.output_libs_path}} -type f -exec file {} + | grep "ELF" | cut -d: -f1)
+          echo "Found files: $found_files"
+          strip $found_files
+        fi
+
+    - name: Prepare artifact Windows
+      if: runner.os == 'Windows'
+      shell: powershell
+      run: |
+        Remove-Item ${{inputs.output_libs_path}}/* -Recurse -Include *.exp,*.lib,*.pdb -Force
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{inputs.artifact}}
+        retention-days: 7
+        path: ${{inputs.output_libs_path}}/*
+
+    - name: Save .scons_cache directory
+      if: inputs.use_cache == 'true' && steps.restore_scons_cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{env.SCONS_CACHE}}
+        key: ${{github.job}}-${{inputs.artifact}}-${{steps.get_godot_cpp_sha.outputs.sha}}-${{github.ref}}-${{github.sha}}

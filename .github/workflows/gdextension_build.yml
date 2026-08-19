@@ -1,0 +1,431 @@
+name: 🛠️ GDExtension Build
+on:
+  push:
+    paths:
+      [
+        src/**,
+        .github/**,
+        "!.github/**/util_*",
+        "patches/**",
+        lib_utils.py,
+        lib_utils_external.py,
+        SConstruct,
+      ]
+  pull_request:
+    paths:
+      [
+        src/**,
+        .github/**,
+        "!.github/**/util_*",
+        "patches/**",
+        lib_utils.py,
+        lib_utils_external.py,
+        SConstruct,
+      ]
+  workflow_dispatch:
+    inputs:
+      #production_build:
+      #  description: Production build
+      #  default: true
+      #  type: boolean
+      use_cache:
+        description: Use Cache
+        default: true
+        type: boolean
+
+# Stop the same workflow actions
+concurrency:
+  group: ${{github.workflow}}-${{github.event.pull_request.number || github.ref}}
+  cancel-in-progress: true
+
+permissions:
+  actions: write
+
+env:
+  PROJECT_NAME: TwoVoIP
+  LIBRARY_NAME: twovoip
+  SCONS_CACHE: ${{github.workspace}}/.scons-cache/
+  USE_CACHE: ${{!format('{0}', inputs.use_cache) && 'true' || format('{0}', inputs.use_cache)}} # Default true
+  #PRODUCTION_BUILD: ${{!format('{0}', inputs.production_build) && 'false' || format('{0}', inputs.production_build)}} # Default false
+  OUTPUT_LIBS_PATH: bin
+  FORCE_DISABLE_UNITY: yes
+  GH_TOKEN: ${{github.token}}
+  NDK_VERSION: '28.1.13356709' # r28b
+
+jobs:
+
+  windows-gdextension:
+    name: 🏁 Windows
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64]
+        target: [template_debug, template_release]
+        lipsync: [yes, no] # If necessary, you can simply remove the `yes` from here
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Compile GDExtension
+        uses: ./.github/actions/compile_gdextension
+        with:
+          platform: windows
+          target: ${{matrix.target}}
+          arch: ${{matrix.arch}}
+          artifact: windows.${{matrix.target}}.${{matrix.arch}}.${{contains(matrix.lipsync, 'yes') && '-lipsync' || '-base'}}
+          additional: lto=full lipsync=${{matrix.lipsync}}
+          output_libs_path: ${{env.OUTPUT_LIBS_PATH}}
+          use_cache: ${{env.USE_CACHE}}
+
+# ============================================
+
+  linux-gdextension:
+    name: 🐧 Linux
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64]
+        target: [template_debug, template_release]
+        lipsync: [yes, no]   # does not actually have lipsync, but having the stub version running is required to android from linux
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Compile GDExtension
+        uses: ./.github/actions/compile_gdextension
+        with:
+          platform: linux
+          target: ${{matrix.target}}
+          arch: ${{matrix.arch}}
+          artifact: linux.${{matrix.target}}.${{matrix.arch}}.${{contains(matrix.lipsync, 'yes') && '-lipsync' || '-base'}}
+          additional: lto=full
+          output_libs_path: ${{env.OUTPUT_LIBS_PATH}}
+          use_cache: ${{env.USE_CACHE}}
+
+# ============================================
+
+  macos-gdextension:
+    name: 🍏 MacOS
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [universal, x86_64]
+        target: [template_debug, template_release]
+        lipsync: [yes, no]
+        exclude:
+          - arch: universal
+            lipsync: yes
+          - arch: x86_64
+            lipsync: no
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Compile GDExtension
+        uses: ./.github/actions/compile_gdextension
+        with:
+          platform: macos
+          target: ${{matrix.target}}
+          arch: ${{matrix.arch}}
+          artifact: macos.${{matrix.target}}.${{matrix.arch}}${{contains(matrix.lipsync, 'yes') && '-lipsync' || '-base'}}
+          additional: lto=full lipsync=${{matrix.lipsync}} macos_deployment_target=10.15
+          output_libs_path: ${{env.OUTPUT_LIBS_PATH}}
+          use_cache: ${{env.USE_CACHE}}
+
+  # ============================================
+
+  ios-gdextension:
+    name: 🍏 Ios
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [universal]
+        target: [template_debug, template_release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Compile GDExtension
+        uses: ./.github/actions/compile_gdextension
+        with:
+          platform: ios
+          target: ${{matrix.target}}
+          arch: ${{matrix.arch}}
+          artifact: ios.${{matrix.target}}.${{matrix.arch}}-base
+          additional: lto=full
+          output_libs_path: ${{env.OUTPUT_LIBS_PATH}}
+          use_cache: ${{env.USE_CACHE}}
+
+  # ============================================
+
+  android-gdextension:
+    name: 🤖 Android
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm32, arm64, x86_32, x86_64]
+        target: [template_debug, template_release]
+        lipsync: [yes, no]
+        exclude:
+          - arch: x86_32
+            lipsync: yes
+          - arch: x86_64
+            lipsync: yes
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Based on https://stackoverflow.com/q/60776512/8980874 and https://github.com/godotengine/godot/blob/4.5-stable/platform/android/detect.py#L89
+      - name: Get ANDROID_HOME
+        run: echo "path=${ANDROID_HOME}" >> $GITHUB_OUTPUT
+        id: get_android_home
+
+      - name: Restore NDK Cache
+        id: ndk-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{steps.get_android_home.outputs.path}}/ndk/${{env.NDK_VERSION}}
+          key: ndk-cache-${{env.NDK_VERSION}}
+
+      - name: Install NDK
+        if: steps.ndk-cache.outputs.cache-hit != 'true'
+        run: echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;${{env.NDK_VERSION}}"
+
+      - name: Save NDK Cache
+        if: steps.ndk-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{steps.get_android_home.outputs.path}}/ndk/${{env.NDK_VERSION}}
+          key: ndk-cache-${{env.NDK_VERSION}}
+
+      - name: Compile GDExtension
+        uses: ./.github/actions/compile_gdextension
+        env:
+          ANDROID_NDK_ROOT: ${{steps.get_android_home.outputs.path}}/ndk/${{env.NDK_VERSION}}
+        with:
+          platform: android
+          target: ${{matrix.target}}
+          arch: ${{matrix.arch}}
+          artifact: android.${{matrix.target}}.${{matrix.arch}}${{contains(matrix.lipsync, 'yes') && '-lipsync' || '-base'}}
+          additional: lto=full lipsync=${{matrix.lipsync}} ANDROID_HOME=""
+          output_libs_path: ${{env.OUTPUT_LIBS_PATH}}
+          use_cache: ${{env.USE_CACHE}}
+
+  # ============================================
+
+  web-gdextension:
+    name: 🕸 Web
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [wasm32]
+        target: [template_debug, template_release]
+        threads: [yes, no]
+
+    env:
+      EM_VERSION: 3.1.63
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download Emscripten
+        uses: pyodide/setup-emsdk@v15
+        continue-on-error: true
+        with:
+          version: ${{env.EM_VERSION}}
+          actions-cache-folder: obj/emsdk_cache
+
+      - name: Compile GDExtension
+        uses: ./.github/actions/compile_gdextension
+        with:
+          platform: web
+          target: ${{matrix.target}}
+          arch: ${{matrix.arch}}
+          artifact: web.${{matrix.target}}.${{matrix.arch}}.threads_${{matrix.threads}}-base
+          additional: lto=full threads=${{matrix.threads}}
+          output_libs_path: ${{env.OUTPUT_LIBS_PATH}}
+          use_cache: ${{env.USE_CACHE}}
+
+  # ============================================
+
+  collect-gdextension:
+    needs:
+      [
+        windows-gdextension,
+        linux-gdextension,
+        macos-gdextension,
+        android-gdextension,
+        web-gdextension,
+        ios-gdextension,
+      ]
+    name: 📦 Collect GDExtension binaries
+    runs-on: ubuntu-latest
+    outputs:
+      is_base_compiled: ${{steps.check_compiled_files.outputs.is_base_compiled}}
+      is_lipsync_compiled: ${{steps.check_compiled_files.outputs.is_lipsync_compiled}}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Base
+        uses: actions/download-artifact@v4
+        with:
+          path: extracted_base
+          pattern: "*-base"
+          merge-multiple: true
+
+      - name: Download LipSync
+        uses: actions/download-artifact@v4
+        with:
+          path: extracted_lipsync
+          pattern: "*-lipsync"
+          merge-multiple: true
+
+      - name: Check compiled files
+        id: check_compiled_files
+        run: |
+          if find extracted_base/ -type f | grep -q .; then
+            echo "is_base_compiled=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_base_compiled=false" >> $GITHUB_OUTPUT
+          fi
+
+          if find extracted_lipsync/ -type f | grep -q .; then
+            echo "is_lipsync_compiled=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_lipsync_compiled=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: List all base libs
+        if: steps.check_compiled_files.outputs.is_base_compiled == 'true'
+        run: |
+          echo "Files structure Base:"
+          find extracted_base -mindepth 1
+          cd extracted_base
+          touch .gdignore
+          echo "Total size Base: $(du -ch -b | grep total | cut -f1 | awk '{printf "%.2f", $1/1048576}') MB, Total number of files: $(find . -type f | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: List all LipSync libs
+        if: steps.check_compiled_files.outputs.is_lipsync_compiled == 'true'
+        run: |
+          echo "Files structure LipSync:"
+          find extracted_lipsync -mindepth 1
+          cd extracted_lipsync
+          touch .gdignore
+          echo "Total size LipSync: $(du -ch -b | grep total | cut -f1 | awk '{printf "%.2f", $1/1048576}') MB, Total number of files: $(find . -type f | wc -l)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload GDExtension Base
+        if: steps.check_compiled_files.outputs.is_base_compiled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: .gdextension_libs_base
+          retention-days: 7
+          path: extracted_base/*
+
+      - name: Upload GDExtension LipSync
+        if: steps.check_compiled_files.outputs.is_lipsync_compiled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: .gdextension_libs_lipsync
+          retention-days: 7
+          path: extracted_lipsync/*
+
+  # ============================================
+
+  pack-release:
+    needs:
+      [collect-gdextension]
+    name: 🏁 Pack release archive
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Base
+        if: needs.collect-gdextension.outputs.is_base_compiled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          path: addons/${{env.LIBRARY_NAME}}/libs
+          name: .gdextension_libs_base
+          merge-multiple: true
+
+      - name: Download LipSync
+        if: needs.collect-gdextension.outputs.is_lipsync_compiled == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          path: addons/${{env.LIBRARY_NAME}}_lipsync/libs
+          name: .gdextension_libs_lipsync
+          merge-multiple: true
+
+      - name: Setup OVRLipSync
+        if: needs.collect-gdextension.outputs.is_lipsync_compiled == 'true'
+        uses: ./.github/actions/setup_ovrlipsync
+        with:
+          extract_directory: "addons/${{env.LIBRARY_NAME}}_lipsync"
+
+      - name: Move base addon to the new root folders
+        if: needs.collect-gdextension.outputs.is_base_compiled == 'true'
+        run: |
+          mkdir -p upload_base/project/addons
+          mv addons/${{env.LIBRARY_NAME}} upload_base/project/addons/${{env.LIBRARY_NAME}}
+
+      - name: Move LipSync addon to the new root folders
+        if: needs.collect-gdextension.outputs.is_lipsync_compiled == 'true'
+        run: |
+          pushd addons/${{env.LIBRARY_NAME}}_lipsync/OVRLipSyncNative
+          find -type f \( -name '*.a' -o -name '*.lib' -o -wholename '*/Include/*' -o -wholename '*/Sample/*' \) -delete
+          find -type d -empty -delete
+          touch .gdignore
+          popd
+
+          mkdir -p upload_lipsync/project/addons
+          mv addons/${{env.LIBRARY_NAME}}_lipsync upload_lipsync/project/addons/${{env.LIBRARY_NAME}}_lipsync
+
+      - name: Upload GDExtension Base
+        if: needs.collect-gdextension.outputs.is_base_compiled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ".${{env.PROJECT_NAME}}"
+          retention-days: 7
+          path: upload_base/*
+
+      - name: Upload GDExtension LipSync
+        if: needs.collect-gdextension.outputs.is_lipsync_compiled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ".${{env.PROJECT_NAME}}_With_LipSync"
+          retention-days: 7
+          path: upload_lipsync/*
