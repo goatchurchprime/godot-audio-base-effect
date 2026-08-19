@@ -1,8 +1,4 @@
 [
-  "opus_encoder_object.cpp",
-  "audio_stream_opus.cpp",
-  "audio_effect_fft_block.cpp",
-  "register_types.cpp",
-  "speex_resampler/resample.c",
-  "utils.cpp"
+  "audio_effect_base.cpp",
+  "register_types.cpp"
 ]

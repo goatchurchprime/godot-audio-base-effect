@@ -28,8 +28,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef AUDIO_EFFECT_FFT_BLOCK_H
-#define AUDIO_EFFECT_FFT_BLOCK_H
+#ifndef AUDIO_EFFECT_BASE_H
+#define AUDIO_EFFECT_BASE_H
 
 #include <godot_cpp/classes/audio_effect.hpp>
 #include <godot_cpp/classes/audio_effect_instance.hpp>
@@ -42,21 +42,15 @@
 #include <godot_cpp/classes/audio_stream_playback.hpp>
 #include <godot_cpp/classes/audio_frame.hpp>
 #include <godot_cpp/classes/audio_stream_playback_resampled.hpp>
-#include <godot_cpp/classes/image.hpp>
-#include <godot_cpp/classes/image_texture.hpp>
-
-
-#include "speex_resampler/speex_resampler.h"
 
 namespace godot {
-    
 
-class AudioEffectFFTBlock;
+class AudioEffectBase;
 
-class AudioEffectFFTBlockInstance : public AudioEffectInstance {
-    GDCLASS(AudioEffectFFTBlockInstance, AudioEffectInstance);
-    friend class AudioEffectFFTBlock;
-    Ref<AudioEffectFFTBlock> base;
+class AudioEffectBaseInstance : public AudioEffectInstance {
+    GDCLASS(AudioEffectBaseInstance, AudioEffectInstance);
+    friend class AudioEffectBase;
+    Ref<AudioEffectBase> base;
 
 protected:
     static void _bind_methods() {;};
@@ -65,77 +59,31 @@ public:
     virtual void _process(const void *src_buffer, AudioFrame *p_dst_frames, int p_frame_count) override; 
     virtual bool _process_silence() const override { return true; }
 
-    ~AudioEffectFFTBlockInstance();
+    ~AudioEffectBaseInstance();
 };
 
-class AudioEffectFFTBlock : public AudioEffect {
-    GDCLASS(AudioEffectFFTBlock, AudioEffect)
-    friend class AudioEffectFFTBlockInstance;
+class AudioEffectBase : public AudioEffect {
+    GDCLASS(AudioEffectBase, AudioEffect)
+    friend class AudioEffectBaseInstance;
 
     int audiosamplerate = 44100;
-    int audiosamplesize = 882;
-
-    PackedVector2Array audiosamplebuffer; 
-
-    int audiosamplebuffer_size = 10240;
-    int fftsize = 1024;
-    int fftrows = 16;
-    int fftirow = 0;
-    PackedByteArray fftslab; 
-    
-    Ref<Image> audiosampleframetextureimage;
-    Ref<ImageTexture> audiosampleframetexture;
-    PackedFloat32Array windowarray;
-
-    int bufferend = 0;    // apply %(audiosamplesize*ringbufferchunks) for actual position
-    int advancestep = 256;
-
-    int opussamplerate = 48000;
-    int opusframesize = 960;
-
-    SpeexResamplerState* speexresampler = NULL;
-    PackedVector2Array audioresampledbuffer;  // size opusframesize*ringbufferchunks
-    PackedVector2Array singleresamplebuffer;  // size opusframesize, for use by chunk_to_opus_packet()
-    SpeexResamplerState* speexbackresampler = NULL;
 
     int instanceinstantiations = 0;
     void process(const AudioFrame *p_src_frames, AudioFrame *p_dst_frames, int p_frame_count);
 
 protected:
     static void _bind_methods();
-
-    void push_sample(const Vector2 &sample);
-    void resample_single_chunk(float* paudioresamples, const float* paudiosamples);
     
 public:
     virtual Ref<AudioEffectInstance> _instantiate() override;
 
-    void set_images(Ref<Image> laudiosampleframetextureimage, Ref<ImageTexture> laudiosampleframetexture, PackedFloat32Array lwindowarray, int advancestep);
-
-    void createencoder();
-    void deleteencoder();
-    void resetencoder(bool clearbuffers);
-
-    bool chunk_available();
-    void drop_chunk();
-    bool undrop_chunk();
-    void push_chunk(const PackedVector2Array& audiosamples); 
-
-    void set_opussamplerate(int lopussamplerate) { opussamplerate = lopussamplerate; };
-    int get_opussamplerate() { return opussamplerate; };
-    void set_opusframesize(int lopusframesize) { opusframesize = lopusframesize; };
-    int get_opusframesize() { return opusframesize; };
     void set_audiosamplerate(int laudiosamplerate) { audiosamplerate = laudiosamplerate; };
     int get_audiosamplerate() { return audiosamplerate; };
-    void set_audiosamplesize(int laudiosamplesize) { audiosamplesize = laudiosamplesize; };
-    int get_audiosamplesize() { return audiosamplesize; };
 
-    int get_fftirow() { return fftirow; };
-
-    AudioEffectFFTBlock();
-    ~AudioEffectFFTBlock();
+    AudioEffectBase();
+    ~AudioEffectBase();
 };
 
 }
 
-#endif // AUDIO_EFFECT_FFT_BLOCK_H
+#endif // AUDIO_EFFECT_BASE_H
