@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://djfejx6setgbr"]
+
+[ext_resource type="AudioStream" uid="uid://bquiekcfluggy" path="res://audiocheck.net_pinknoise.wav" id="1_ig7tw"]
+
+[node name="Main" type="Node3D" unique_id=1233391747]
+
+[node name="AudioListener3D" type="AudioListener3D" parent="." unique_id=993439918]
+current = true
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="." unique_id=789419794]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42.50115, 0, -0.43988705)
+stream = ExtResource("1_ig7tw")
+panning_strength = 2.05

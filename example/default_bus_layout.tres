@@ -1,0 +1,8 @@
+[gd_resource type="AudioBusLayout" format=3 uid="uid://bpykci5sbroe6"]
+
+[sub_resource type="AudioEffectBase" id="AudioEffectBase_j3pel"]
+resource_name = "Base"
+
+[resource]
+bus/0/effect/0/effect = SubResource("AudioEffectBase_j3pel")
+bus/0/effect/0/enabled = false
