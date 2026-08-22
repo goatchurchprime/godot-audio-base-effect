@@ -3,6 +3,12 @@
 [sub_resource type="AudioEffectBase" id="AudioEffectBase_j3pel"]
 resource_name = "Base"
 
+[sub_resource type="AudioEffectDattorroVerb" id="AudioEffectDattorroVerb_j3pel"]
+dry_wet = 0.0
+resource_name = "DattorroVerb"
+
 [resource]
 bus/0/effect/0/effect = SubResource("AudioEffectBase_j3pel")
 bus/0/effect/0/enabled = false
+bus/0/effect/1/effect = SubResource("AudioEffectDattorroVerb_j3pel")
+bus/0/effect/1/enabled = true

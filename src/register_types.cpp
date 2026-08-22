@@ -16,6 +16,8 @@ void initialize_base_effect_module(ModuleInitializationLevel p_level) {
 
     ClassDB::register_class<AudioEffectBase>();
     ClassDB::register_class<AudioEffectBaseInstance>();
+    ClassDB::register_class<AudioEffectDattorroVerb>();
+    ClassDB::register_class<AudioEffectDattorroVerbInstance>();
 }
 
 void uninitialize_base_effect_module(ModuleInitializationLevel p_level) {
