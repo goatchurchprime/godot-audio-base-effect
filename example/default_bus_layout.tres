@@ -4,9 +4,13 @@
 resource_name = "Base"
 
 [sub_resource type="AudioEffectDattorroVerb" id="AudioEffectDattorroVerb_g28q7"]
-damping = 0.1
-pre_filter = 0.1
-input_diffusion1 = 0.1
+dry_wet = 1.0
+pre_delay = 0.219
+damping = 1.0
+pre_filter = 0.678
+input_diffusion1 = 0.949
+input_diffusion2 = 0.81
+decay_diffusion = 0.597
 resource_name = "DattorroVerb"
 
 [resource]

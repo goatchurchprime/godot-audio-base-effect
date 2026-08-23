@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cpoy2n8jviofd" path="res://reverbtest.gd" id="1_epntm"]
 [ext_resource type="AudioStream" uid="uid://d1lmn4vpkttbl" path="res://steps_rock_01.ogg" id="2_l7b4l"]
+[ext_resource type="AudioStream" uid="uid://bw6xyxrddx8sm" path="res://Wicked_game.mp3" id="3_l7b4l"]
 
 [node name="Reverbtest" type="Control" unique_id=915006175]
 layout_mode = 3
@@ -23,6 +24,7 @@ columns = 2
 
 [node name="Label5" type="Label" parent="VBox/GridContainer" unique_id=1554248578]
 layout_mode = 2
+text = "pitch scale"
 
 [node name="HSliderPitch" type="HSlider" parent="VBox/GridContainer" unique_id=1357264219]
 layout_mode = 2
@@ -88,6 +90,39 @@ max_value = 1.0
 step = 0.01
 value = 0.75
 
+[node name="Label8" type="Label" parent="VBox/GridContainer" unique_id=814509397]
+layout_mode = 2
+text = "Input Diffusion2"
+
+[node name="HSliderInputDiffusion2" type="HSlider" parent="VBox/GridContainer" unique_id=562003168]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.06
+
+[node name="Label9" type="Label" parent="VBox/GridContainer" unique_id=1707506874]
+layout_mode = 2
+text = "Decay Diffusion"
+
+[node name="HSliderDecayDiffusion" type="HSlider" parent="VBox/GridContainer" unique_id=589689665]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.7
+
+[node name="Label10" type="Label" parent="VBox/GridContainer" unique_id=1933752328]
+layout_mode = 2
+text = "Decay"
+
+[node name="HSliderDecay" type="HSlider" parent="VBox/GridContainer" unique_id=171063145]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.7
+
 [node name="Label4" type="Label" parent="VBox/GridContainer" unique_id=394715468]
 layout_mode = 2
 text = "Damping"
@@ -99,6 +134,11 @@ max_value = 1.0
 step = 0.01
 value = 0.95
 
+[node name="StereoButton" type="CheckButton" parent="VBox/GridContainer" unique_id=457606764]
+layout_mode = 2
+button_pressed = true
+text = "Stereo"
+
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=345919100]
 stream = ExtResource("2_l7b4l")
 max_polyphony = 6
@@ -107,6 +147,11 @@ bus = &"reverbtest"
 [node name="Timer" type="Timer" parent="AudioStreamPlayer" unique_id=680733324]
 autostart = true
 
+[node name="AudioStreamPlayer2" type="AudioStreamPlayer" parent="." unique_id=289435764]
+stream = ExtResource("3_l7b4l")
+bus = &"reverbtest"
+
 [connection signal="value_changed" from="VBox/GridContainer/HSliderPitch" to="." method="_on_h_slider_pitch_value_changed"]
 [connection signal="value_changed" from="VBox/GridContainer/HSliderReplayLoop" to="." method="_on_h_slider_replay_loop_value_changed"]
+[connection signal="toggled" from="VBox/GridContainer/StereoButton" to="." method="_on_stereo_button_toggled"]
 [connection signal="timeout" from="AudioStreamPlayer/Timer" to="." method="_on_timer_timeout"]

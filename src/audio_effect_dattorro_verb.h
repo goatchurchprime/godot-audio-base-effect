@@ -41,22 +41,6 @@ extern "C" {
 #include "dattorro-verb/verb.h"
 }
 
-#define DECLARE_PROPERTY_DEFAULT(TYPE, NAME, DEFAULT) \
-                                                      \
-public:                                               \
-	void set_##NAME(const TYPE p_##NAME);             \
-	TYPE get_##NAME() const;                          \
-                                                      \
-private:                                              \
-	TYPE NAME = DEFAULT;
-
-#define CREATE_VAR_BINDINGS(CLASS, TYPE, NAME)                                    \
-	ClassDB::bind_method(D_METHOD("get_" #NAME), &CLASS::get_##NAME);             \
-	ClassDB::bind_method(D_METHOD("set_" #NAME, "p_" #NAME), &CLASS::set_##NAME); \
-	ADD_PROPERTY(PropertyInfo(Variant::TYPE, #NAME), "set_" #NAME, "get_" #NAME);
-
-
-
 namespace godot {
 
 class AudioEffectDattorroVerbInstance;
@@ -65,29 +49,35 @@ class AudioEffectDattorroVerbInstance;
 class AudioEffectDattorroVerb : public AudioEffect {
 	GDCLASS(AudioEffectDattorroVerb, AudioEffect)
 
-
+	bool stereo = true;
 	double dry_wet = 0.21;
 	double pre_delay = 0.1;
 	double pre_filter = 0.85;
-	double damping = 0.95;
 	double input_diffusion1 = 0.75;
+	double input_diffusion2 = 0.0625;
+	double decay_diffusion = 0.7;
+	double decay = 0.75;
+	double damping = 0.95;
 
+	void set_stereo(bool lstereo) { stereo = lstereo; };
+	bool get_stereo() const { return stereo; };
 	void set_dry_wet(float ldry_wet) { dry_wet = ldry_wet; };
 	float get_dry_wet() const { return dry_wet; };
 	void set_pre_delay(float lpre_delay) { pre_delay = lpre_delay; };
 	float get_pre_delay() const { return pre_delay; };
 	void set_pre_filter(float lpre_filter) { pre_filter = lpre_filter; };
 	float get_pre_filter() const { return pre_filter; };
-	void set_damping(float ldamping) { damping = ldamping; };
-	float get_damping() const { return damping; };
 	void set_input_diffusion1(float linput_diffusion1) { input_diffusion1 = linput_diffusion1; };
 	float get_input_diffusion1() const { return input_diffusion1; };
+	void set_input_diffusion2(float linput_diffusion2) { input_diffusion2 = linput_diffusion2; };
+	float get_input_diffusion2() const { return input_diffusion2; };
+	void set_decay_diffusion(float ldecay_diffusion) { decay_diffusion = ldecay_diffusion; };
+	float get_decay_diffusion() const { return decay_diffusion; };
+	void set_decay(float ldecay) { decay = ldecay; };
+	float get_decay() const { return decay; };
+	void set_damping(float ldamping) { damping = ldamping; };
+	float get_damping() const { return damping; };
     
-
-	DECLARE_PROPERTY_DEFAULT(double, input_diffusion2, 0.0625)
-	DECLARE_PROPERTY_DEFAULT(double, decay_diffusion, 0.7)
-	DECLARE_PROPERTY_DEFAULT(double, decay, 0.75)
-
 protected:
 	static void _bind_methods();
 
@@ -121,12 +111,11 @@ public:
 	double dry_wet = 0.2;
 	double pre_delay = 0.1;
 	double pre_filter = 0.85;
-	double damping = 0.95;
 	double input_diffusion1 = 0.75;
-
-	DECLARE_PROPERTY_DEFAULT(double, input_diffusion2, 0.0625)
-	DECLARE_PROPERTY_DEFAULT(double, decay_diffusion, 0.7)
-	DECLARE_PROPERTY_DEFAULT(double, decay, 0.75)
+	double input_diffusion2 = 0.0625;
+	double decay_diffusion = 0.7;
+	double decay = 0.75;
+	double damping = 0.95;
 
 protected:
 	static void _bind_methods();

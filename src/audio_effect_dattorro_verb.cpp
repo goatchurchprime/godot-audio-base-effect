@@ -48,8 +48,6 @@ AudioEffectDattorroVerbInstance::AudioEffectDattorroVerbInstance() {
 	reverb_right = DattorroVerb_create();
 }
 
-
-
 AudioEffectDattorroVerbInstance::~AudioEffectDattorroVerbInstance() {
 	if (reverb_left) {
 		DattorroVerb_delete(reverb_left);
@@ -59,25 +57,6 @@ AudioEffectDattorroVerbInstance::~AudioEffectDattorroVerbInstance() {
 		DattorroVerb_delete(reverb_right);
 		reverb_right = nullptr; // Set to nullptr after deletion (defensive programming)
 	}
-}
-
-double AudioEffectDattorroVerbInstance::get_input_diffusion2() const { return input_diffusion2; }
-void AudioEffectDattorroVerbInstance::set_input_diffusion2(const double p_input_diffusion2) {
-	input_diffusion2 = p_input_diffusion2;
-	DattorroVerb_setInputDiffusion2(reverb_left, input_diffusion2);
-	DattorroVerb_setInputDiffusion2(reverb_right, input_diffusion2);
-}
-double AudioEffectDattorroVerbInstance::get_decay_diffusion() const { return decay_diffusion; }
-void AudioEffectDattorroVerbInstance::set_decay_diffusion(const double p_decay_diffusion) {
-	decay_diffusion = p_decay_diffusion;
-	DattorroVerb_setDecayDiffusion(reverb_left, decay_diffusion);
-	DattorroVerb_setDecayDiffusion(reverb_right, decay_diffusion);
-}
-double AudioEffectDattorroVerbInstance::get_decay() const { return decay; }
-void AudioEffectDattorroVerbInstance::set_decay(const double p_decay) {
-	decay = p_decay;
-	DattorroVerb_setDecay(reverb_left, decay);
-	DattorroVerb_setDecay(reverb_right, decay);
 }
 
 void AudioEffectDattorroVerbInstance::reset() {
@@ -110,29 +89,55 @@ void AudioEffectDattorroVerbInstance::_process(const void *src_buffer, AudioFram
 		DattorroVerb_setInputDiffusion1(reverb_left, input_diffusion1);
 		DattorroVerb_setInputDiffusion1(reverb_right, input_diffusion1);
 	}
-	
+	if (input_diffusion2 != base->input_diffusion2) {
+		input_diffusion2 = base->input_diffusion2;
+		DattorroVerb_setInputDiffusion1(reverb_left, input_diffusion2);
+		DattorroVerb_setInputDiffusion1(reverb_right, input_diffusion2);
+	}
+	if (decay_diffusion != base->decay_diffusion) {
+		decay_diffusion = base->decay_diffusion;
+		DattorroVerb_setDecayDiffusion(reverb_left, decay_diffusion);
+		DattorroVerb_setDecayDiffusion(reverb_right, decay_diffusion);
+	}
+	if (decay != base->decay) {
+		decay = base->decay;
+		DattorroVerb_setDecay(reverb_left, decay);
+		DattorroVerb_setDecay(reverb_right, decay);
+	}
 
 	// should do mono actually and mix the stereo bits
-	for (int i = 0; i < frame_count; i++) {
-		// get input
-		float input_left = p_src_frames[i].left;
-		float input_right = p_src_frames[i].right;
+	if (base->stereo) {
+		for (int i = 0; i < frame_count; i++) {
+			// get input
+			float input_left = p_src_frames[i].left;
+			float input_right = p_src_frames[i].right;
 
-		// process reverb
-		DattorroVerb_process(reverb_left, input_left);
-		DattorroVerb_process(reverb_right, input_right);
+			// process reverb
+			DattorroVerb_process(reverb_left, input_left);
+			DattorroVerb_process(reverb_right, input_right);
 
-		// get output	
-		float reverb_output_left = DattorroVerb_getLeft(reverb_left);
-		float reverb_output_right = DattorroVerb_getLeft(reverb_right);
+			// get output	
+			float reverb_output_left = DattorroVerb_getLeft(reverb_left);
+			float reverb_output_right = DattorroVerb_getLeft(reverb_right);
 
-		// mix dry and wet signals
-		float output_left = (1.0 - dry_wet) * input_left + reverb_output_left * dry_wet;
-		float output_right = (1.0 - dry_wet) * input_right + reverb_output_right * dry_wet;
+			// mix dry and wet signals
+			float output_left = (1.0 - dry_wet) * input_left + reverb_output_left * dry_wet;
+			float output_right = (1.0 - dry_wet) * input_right + reverb_output_right * dry_wet;
 
-		// return final mix
-		dst_buffer[i].left = output_left;
-		dst_buffer[i].right = output_right;
+			// return final mix
+			dst_buffer[i].left = output_left;
+			dst_buffer[i].right = output_right;
+		}
+	} else {
+		struct sDattorroVerb *reverb = reverb_left;
+		for (int i = 0; i < frame_count; i++) {
+			float v = (p_src_frames[i].left + p_src_frames[i].right) * 0.5;
+			DattorroVerb_process(reverb, v);
+			float reverb_output_left = DattorroVerb_getLeft(reverb);
+			float reverb_output_right = DattorroVerb_getRight(reverb);
+			dst_buffer[i].left = (1.0 - dry_wet) * v + reverb_output_left * dry_wet;
+			dst_buffer[i].right = (1.0 - dry_wet) * v + reverb_output_right * dry_wet;
+		}
 	}
 }
 
@@ -141,50 +146,41 @@ void AudioEffectDattorroVerbInstance::_process(const void *src_buffer, AudioFram
 #pragma region WRAPPER
 
 void AudioEffectDattorroVerb::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("set_stereo", "stereo"), &AudioEffectDattorroVerb::set_stereo);
+    ClassDB::bind_method(D_METHOD("get_stereo"), &AudioEffectDattorroVerb::get_stereo);
+    ADD_PROPERTY(PropertyInfo(Variant::BOOL, "stereo"), "set_stereo", "get_stereo");
+
     ClassDB::bind_method(D_METHOD("set_dry_wet", "dry_wet"), &AudioEffectDattorroVerb::set_dry_wet);
     ClassDB::bind_method(D_METHOD("get_dry_wet"), &AudioEffectDattorroVerb::get_dry_wet);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "dry_wet", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_dry_wet", "get_dry_wet");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "dry_wet", PROPERTY_HINT_RANGE, "0.0,1.0,0.001"), "set_dry_wet", "get_dry_wet");
 
     ClassDB::bind_method(D_METHOD("set_pre_delay", "pre_delay"), &AudioEffectDattorroVerb::set_pre_delay);
     ClassDB::bind_method(D_METHOD("get_pre_delay"), &AudioEffectDattorroVerb::get_pre_delay);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pre_delay", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_pre_delay", "get_pre_delay");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pre_delay", PROPERTY_HINT_RANGE, "0.0,1.0,0.001"), "set_pre_delay", "get_pre_delay");
 
     ClassDB::bind_method(D_METHOD("set_damping", "damping"), &AudioEffectDattorroVerb::set_damping);
     ClassDB::bind_method(D_METHOD("get_damping"), &AudioEffectDattorroVerb::get_damping);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "damping", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_damping", "get_damping");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "damping", PROPERTY_HINT_RANGE, "0.0,1.0,0.001"), "set_damping", "get_damping");
 
     ClassDB::bind_method(D_METHOD("set_pre_filter", "pre_filter"), &AudioEffectDattorroVerb::set_pre_filter);
     ClassDB::bind_method(D_METHOD("get_pre_filter"), &AudioEffectDattorroVerb::get_pre_filter);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pre_filter", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_pre_filter", "get_pre_filter");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pre_filter", PROPERTY_HINT_RANGE, "0.0,1.0,0.001"), "set_pre_filter", "get_pre_filter");
 
     ClassDB::bind_method(D_METHOD("set_input_diffusion1", "input_diffusion1"), &AudioEffectDattorroVerb::set_input_diffusion1);
     ClassDB::bind_method(D_METHOD("get_input_diffusion1"), &AudioEffectDattorroVerb::get_input_diffusion1);
-    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "input_diffusion1", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_input_diffusion1", "get_input_diffusion1");
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "input_diffusion1", PROPERTY_HINT_RANGE, "0.0,1.0,0.001"), "set_input_diffusion1", "get_input_diffusion1");
 
-	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, input_diffusion2)
-	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, decay)
-	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, decay_diffusion)
-}
-double AudioEffectDattorroVerb::get_input_diffusion2() const { return input_diffusion2; }
-void AudioEffectDattorroVerb::set_input_diffusion2(const double p_input_diffusion2) {
-	input_diffusion2 = p_input_diffusion2;
-	if (instance.is_valid()) {
-		instance->set_input_diffusion2(input_diffusion2);
-	}
-}
-double AudioEffectDattorroVerb::get_decay_diffusion() const { return decay_diffusion; }
-void AudioEffectDattorroVerb::set_decay_diffusion(const double p_decay_diffusion) {
-	decay_diffusion = p_decay_diffusion;
-	if (instance.is_valid()) {
-		instance->set_decay_diffusion(decay_diffusion);
-	}
-}
-double AudioEffectDattorroVerb::get_decay() const { return decay; }
-void AudioEffectDattorroVerb::set_decay(const double p_decay) {
-	decay = p_decay;
-	if (instance.is_valid()) {
-		instance->set_decay(decay);
-	}
+    ClassDB::bind_method(D_METHOD("set_input_diffusion2", "input_diffusion2"), &AudioEffectDattorroVerb::set_input_diffusion2);
+    ClassDB::bind_method(D_METHOD("get_input_diffusion2"), &AudioEffectDattorroVerb::get_input_diffusion2);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "input_diffusion2", PROPERTY_HINT_RANGE, "0.0,1.0,0.001"), "set_input_diffusion2", "get_input_diffusion2");
+
+    ClassDB::bind_method(D_METHOD("set_decay_diffusion", "decay_diffusion"), &AudioEffectDattorroVerb::set_decay_diffusion);
+    ClassDB::bind_method(D_METHOD("get_decay_diffusion"), &AudioEffectDattorroVerb::get_decay_diffusion);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "decay_diffusion", PROPERTY_HINT_RANGE, "0.0,1.0,0.001"), "set_decay_diffusion", "get_decay_diffusion");
+
+    ClassDB::bind_method(D_METHOD("set_decay", "decay"), &AudioEffectDattorroVerb::set_decay);
+    ClassDB::bind_method(D_METHOD("get_decay"), &AudioEffectDattorroVerb::get_decay);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "decay", PROPERTY_HINT_RANGE, "0.0,1.0,0.001"), "set_decay", "get_decay");
 }
 
 //
