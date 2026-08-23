@@ -65,20 +65,26 @@ class AudioEffectDattorroVerbInstance;
 class AudioEffectDattorroVerb : public AudioEffect {
 	GDCLASS(AudioEffectDattorroVerb, AudioEffect)
 
-	DECLARE_PROPERTY_DEFAULT(bool, stereo, true)
 
 	double dry_wet = 0.21;
-    void set_dry_wet(float ldry_wet) { dry_wet = ldry_wet; };
-    float get_dry_wet() { return dry_wet; };
+	double pre_delay = 0.1;
+	double pre_filter = 0.85;
+	double damping = 0.95;
 
+	void set_dry_wet(float ldry_wet) { dry_wet = ldry_wet; };
+	float get_dry_wet() const { return dry_wet; };
+	void set_pre_delay(float lpre_delay) { pre_delay = lpre_delay; };
+	float get_pre_delay() const { return pre_delay; };
+	void set_pre_filter(float lpre_filter) { pre_filter = lpre_filter; };
+	float get_pre_filter() const { return pre_filter; };
+	void set_damping(float ldamping) { damping = ldamping; };
+	float get_damping() const { return damping; };
+    
 
-	DECLARE_PROPERTY_DEFAULT(double, pre_delay, 0.1)
-	DECLARE_PROPERTY_DEFAULT(double, pre_filter, 0.85)
 	DECLARE_PROPERTY_DEFAULT(double, input_diffusion1, 0.75)
 	DECLARE_PROPERTY_DEFAULT(double, input_diffusion2, 0.0625)
 	DECLARE_PROPERTY_DEFAULT(double, decay_diffusion, 0.7)
 	DECLARE_PROPERTY_DEFAULT(double, decay, 0.75)
-	DECLARE_PROPERTY_DEFAULT(double, damping, 0.95)
 
 protected:
 	static void _bind_methods();
@@ -110,16 +116,15 @@ public:
 
 	virtual void _process(const void *src_buffer, AudioFrame *dst_buffer, int frame_count) override;
 
-	bool stereo = true;
 	double dry_wet = 0.2;
+	double pre_delay = 0.1;
+	double pre_filter = 0.85;
+	double damping = 0.95;
 
-	DECLARE_PROPERTY_DEFAULT(double, pre_delay, 0.1)
-	DECLARE_PROPERTY_DEFAULT(double, pre_filter, 0.85)
 	DECLARE_PROPERTY_DEFAULT(double, input_diffusion1, 0.75)
 	DECLARE_PROPERTY_DEFAULT(double, input_diffusion2, 0.0625)
 	DECLARE_PROPERTY_DEFAULT(double, decay_diffusion, 0.7)
 	DECLARE_PROPERTY_DEFAULT(double, decay, 0.75)
-	DECLARE_PROPERTY_DEFAULT(double, damping, 0.95)
 
 protected:
 	static void _bind_methods();

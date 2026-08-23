@@ -61,18 +61,6 @@ AudioEffectDattorroVerbInstance::~AudioEffectDattorroVerbInstance() {
 	}
 }
 
-double AudioEffectDattorroVerbInstance::get_pre_delay() const { return pre_delay; }
-void AudioEffectDattorroVerbInstance::set_pre_delay(const double p_pre_delay) {
-	pre_delay = p_pre_delay;
-	DattorroVerb_setPreDelay(reverb_left, pre_delay);
-	DattorroVerb_setPreDelay(reverb_right, pre_delay);
-}
-double AudioEffectDattorroVerbInstance::get_pre_filter() const { return pre_filter; }
-void AudioEffectDattorroVerbInstance::set_pre_filter(const double p_pre_filter) {
-	pre_filter = p_pre_filter;
-	DattorroVerb_setPreFilter(reverb_left, pre_filter);
-	DattorroVerb_setPreFilter(reverb_right, pre_filter);
-}
 double AudioEffectDattorroVerbInstance::get_input_diffusion1() const { return input_diffusion1; }
 void AudioEffectDattorroVerbInstance::set_input_diffusion1(const double p_input_diffusion1) {
 	input_diffusion1 = p_input_diffusion1;
@@ -97,12 +85,6 @@ void AudioEffectDattorroVerbInstance::set_decay(const double p_decay) {
 	DattorroVerb_setDecay(reverb_left, decay);
 	DattorroVerb_setDecay(reverb_right, decay);
 }
-double AudioEffectDattorroVerbInstance::get_damping() const { return damping; }
-void AudioEffectDattorroVerbInstance::set_damping(const double p_damping) {
-	damping = p_damping;
-	DattorroVerb_setDamping(reverb_left, damping);
-	DattorroVerb_setDamping(reverb_right, damping);
-}
 
 void AudioEffectDattorroVerbInstance::reset() {
 }
@@ -113,9 +95,25 @@ void AudioEffectDattorroVerbInstance::_bind_methods() {
 void AudioEffectDattorroVerbInstance::_process(const void *src_buffer, AudioFrame *dst_buffer, int frame_count) {
 	const AudioFrame *p_src_frames = static_cast<const AudioFrame *>(src_buffer);
 
-	if (dry_wet != base->dry_wet)  printf(" drywet change %f \n", dry_wet);
 	dry_wet = CLAMP(base->dry_wet, 0.0, 1.0);
+	if (pre_delay != base->pre_delay) {
+		pre_delay = base->pre_delay;
+		DattorroVerb_setPreDelay(reverb_left, pre_delay);
+		DattorroVerb_setPreDelay(reverb_right, pre_delay);
+	}
+	if (pre_filter != base->pre_filter) {
+		pre_filter = base->pre_filter;
+		DattorroVerb_setPreFilter(reverb_left, pre_filter);
+		DattorroVerb_setPreFilter(reverb_right, pre_filter);
+	}
+	if (damping != base->damping) {
+		damping = base->damping;
+		DattorroVerb_setDamping(reverb_left, damping);
+		DattorroVerb_setDamping(reverb_right, damping);
+	}
+	
 
+	// should do mono actually and mix the stereo bits
 	for (int i = 0; i < frame_count; i++) {
 		// get input
 		float input_left = p_src_frames[i].left;
@@ -148,29 +146,24 @@ void AudioEffectDattorroVerb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_dry_wet"), &AudioEffectDattorroVerb::get_dry_wet);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "dry_wet", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_dry_wet", "get_dry_wet");
 
-	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, pre_delay)
-	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, pre_filter)
+    ClassDB::bind_method(D_METHOD("set_pre_delay", "pre_delay"), &AudioEffectDattorroVerb::set_pre_delay);
+    ClassDB::bind_method(D_METHOD("get_pre_delay"), &AudioEffectDattorroVerb::get_pre_delay);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pre_delay", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_pre_delay", "get_pre_delay");
+
+    ClassDB::bind_method(D_METHOD("set_damping", "damping"), &AudioEffectDattorroVerb::set_damping);
+    ClassDB::bind_method(D_METHOD("get_damping"), &AudioEffectDattorroVerb::get_damping);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "damping", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_damping", "get_damping");
+
+    ClassDB::bind_method(D_METHOD("set_pre_filter", "pre_filter"), &AudioEffectDattorroVerb::set_pre_filter);
+    ClassDB::bind_method(D_METHOD("get_pre_filter"), &AudioEffectDattorroVerb::get_pre_filter);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pre_filter", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_pre_filter", "get_pre_filter");
+
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, input_diffusion1)
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, input_diffusion2)
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, decay)
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, decay_diffusion)
-	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, damping)
 }
 
-double AudioEffectDattorroVerb::get_pre_delay() const { return pre_delay; }
-void AudioEffectDattorroVerb::set_pre_delay(const double p_pre_delay) {
-	pre_delay = p_pre_delay;
-	if (instance.is_valid()) {
-		instance->set_pre_delay(pre_delay);
-	}
-}
-double AudioEffectDattorroVerb::get_pre_filter() const { return pre_filter; }
-void AudioEffectDattorroVerb::set_pre_filter(const double p_pre_filter) {
-	pre_filter = p_pre_filter;
-	if (instance.is_valid()) {
-		instance->set_pre_filter(pre_filter);
-	}
-}
 double AudioEffectDattorroVerb::get_input_diffusion1() const { return input_diffusion1; }
 void AudioEffectDattorroVerb::set_input_diffusion1(const double p_input_diffusion1) {
 	input_diffusion1 = p_input_diffusion1;
@@ -197,13 +190,6 @@ void AudioEffectDattorroVerb::set_decay(const double p_decay) {
 	decay = p_decay;
 	if (instance.is_valid()) {
 		instance->set_decay(decay);
-	}
-}
-double AudioEffectDattorroVerb::get_damping() const { return damping; }
-void AudioEffectDattorroVerb::set_damping(const double p_damping) {
-	damping = p_damping;
-	if (instance.is_valid()) {
-		instance->set_damping(damping);
 	}
 }
 

@@ -17,14 +17,25 @@ layout_mode = 0
 offset_right = 467.0
 offset_bottom = 84.0
 
-[node name="HBox" type="HBoxContainer" parent="VBox" unique_id=2082074864]
+[node name="GridContainer" type="GridContainer" parent="VBox" unique_id=95531250]
+layout_mode = 2
+columns = 2
+
+[node name="Label5" type="Label" parent="VBox/GridContainer" unique_id=1554248578]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBox/HBox" unique_id=984958098]
+[node name="HSliderPitch" type="HSlider" parent="VBox/GridContainer" unique_id=1357264219]
+layout_mode = 2
+min_value = 0.5
+max_value = 3.0
+step = 0.1
+value = 1.0
+
+[node name="Label" type="Label" parent="VBox/GridContainer" unique_id=984958098]
 layout_mode = 2
 text = "Time gap"
 
-[node name="HSliderReplayLoop" type="HSlider" parent="VBox/HBox" unique_id=1121128112]
+[node name="HSliderReplayLoop" type="HSlider" parent="VBox/GridContainer" unique_id=1121128112]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -32,20 +43,50 @@ max_value = 5.0
 step = 0.1
 value = 1.0
 
-[node name="HBox2" type="HBoxContainer" parent="VBox" unique_id=955965216]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="VBox/HBox2" unique_id=252492472]
+[node name="Label2" type="Label" parent="VBox/GridContainer" unique_id=252492472]
 layout_mode = 2
 text = "Wet Dry"
 
-[node name="HSliderDryWet" type="HSlider" parent="VBox/HBox2" unique_id=353335534]
+[node name="HSliderDryWet" type="HSlider" parent="VBox/GridContainer" unique_id=353335534]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
 step = 0.01
 value = 0.5
+
+[node name="Label3" type="Label" parent="VBox/GridContainer" unique_id=185623825]
+layout_mode = 2
+text = "Pre Delay"
+
+[node name="HSliderPreDelay" type="HSlider" parent="VBox/GridContainer" unique_id=428743148]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.1
+
+[node name="Label6" type="Label" parent="VBox/GridContainer" unique_id=481047455]
+layout_mode = 2
+text = "Pre Filter"
+
+[node name="HSliderPreFilter" type="HSlider" parent="VBox/GridContainer" unique_id=1246414116]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.85
+
+[node name="Label4" type="Label" parent="VBox/GridContainer" unique_id=394715468]
+layout_mode = 2
+text = "Damping"
+
+[node name="HSliderDamping" type="HSlider" parent="VBox/GridContainer" unique_id=1881334415]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.95
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=345919100]
 stream = ExtResource("2_l7b4l")
@@ -55,6 +96,6 @@ bus = &"reverbtest"
 [node name="Timer" type="Timer" parent="AudioStreamPlayer" unique_id=680733324]
 autostart = true
 
-[connection signal="value_changed" from="VBox/HBox/HSliderReplayLoop" to="." method="_on_h_slider_replay_loop_value_changed"]
-[connection signal="value_changed" from="VBox/HBox2/HSliderDryWet" to="." method="_on_h_slider_dry_wet_value_changed"]
+[connection signal="value_changed" from="VBox/GridContainer/HSliderPitch" to="." method="_on_h_slider_pitch_value_changed"]
+[connection signal="value_changed" from="VBox/GridContainer/HSliderReplayLoop" to="." method="_on_h_slider_replay_loop_value_changed"]
 [connection signal="timeout" from="AudioStreamPlayer/Timer" to="." method="_on_timer_timeout"]
