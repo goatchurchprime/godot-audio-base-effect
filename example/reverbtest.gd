@@ -7,7 +7,7 @@ func _ready():
 	var idx = AudioServer.get_bus_index($AudioStreamPlayer.bus)
 	dv = AudioServer.get_bus_effect(idx, 0)
 	dvi = AudioServer.get_bus_effect_instance(idx, 0)
-	prints(dv, dvi)
+
 	%HSliderReplayLoop.value = 1.1
 	%HSliderDryWet.value_changed.connect(func (v): update_dv())
 	%HSliderPreDelay.value_changed.connect(func (v): update_dv())
