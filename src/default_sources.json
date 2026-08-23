@@ -1,4 +1,6 @@
 [
   "audio_effect_base.cpp",
+  "audio_effect_dattorro_verb.cpp",
+  "dattorro-verb/verb.c",
   "register_types.cpp"
 ]

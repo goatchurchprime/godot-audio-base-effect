@@ -1,6 +1,7 @@
 #include "register_types.h"
 
 #include "audio_effect_base.h"
+#include "audio_effect_dattorro_verb.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -16,6 +17,8 @@ void initialize_base_effect_module(ModuleInitializationLevel p_level) {
 
     ClassDB::register_class<AudioEffectBase>();
     ClassDB::register_class<AudioEffectBaseInstance>();
+    ClassDB::register_class<AudioEffectDattorroVerb>();
+    ClassDB::register_class<AudioEffectDattorroVerbInstance>();
 }
 
 void uninitialize_base_effect_module(ModuleInitializationLevel p_level) {

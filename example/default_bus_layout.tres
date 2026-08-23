@@ -3,6 +3,25 @@
 [sub_resource type="AudioEffectBase" id="AudioEffectBase_j3pel"]
 resource_name = "Base"
 
+[sub_resource type="AudioEffectDattorroVerb" id="AudioEffectDattorroVerb_g28q7"]
+stereo = false
+dry_wet = 0.661
+damping = 0.642
+pre_filter = 0.495
+input_diffusion1 = 0.874
+input_diffusion2 = 0.829
+decay_diffusion = 0.853
+decay = 0.893
+resource_name = "DattorroVerb"
+
 [resource]
 bus/0/effect/0/effect = SubResource("AudioEffectBase_j3pel")
 bus/0/effect/0/enabled = false
+bus/1/name = &"reverbtest"
+bus/1/solo = false
+bus/1/mute = false
+bus/1/bypass_fx = false
+bus/1/volume_db = 0.0
+bus/1/send = &"Master"
+bus/1/effect/0/effect = SubResource("AudioEffectDattorroVerb_g28q7")
+bus/1/effect/0/enabled = true

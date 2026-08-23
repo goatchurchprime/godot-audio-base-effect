@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Godot Audio Base Effect"
-run/main_scene="uid://djfejx6setgbr"
+run/main_scene="uid://et1fj0yues1n"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 

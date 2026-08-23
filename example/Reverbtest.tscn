@@ -1,0 +1,157 @@
+[gd_scene format=3 uid="uid://et1fj0yues1n"]
+
+[ext_resource type="Script" uid="uid://cpoy2n8jviofd" path="res://reverbtest.gd" id="1_epntm"]
+[ext_resource type="AudioStream" uid="uid://d1lmn4vpkttbl" path="res://steps_rock_01.ogg" id="2_l7b4l"]
+[ext_resource type="AudioStream" uid="uid://bw6xyxrddx8sm" path="res://Wicked_game.mp3" id="3_l7b4l"]
+
+[node name="Reverbtest" type="Control" unique_id=915006175]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_epntm")
+
+[node name="VBox" type="VBoxContainer" parent="." unique_id=345196888]
+layout_mode = 0
+offset_right = 467.0
+offset_bottom = 84.0
+
+[node name="GridContainer" type="GridContainer" parent="VBox" unique_id=95531250]
+layout_mode = 2
+columns = 2
+
+[node name="Label5" type="Label" parent="VBox/GridContainer" unique_id=1554248578]
+layout_mode = 2
+text = "pitch scale"
+
+[node name="HSliderPitch" type="HSlider" parent="VBox/GridContainer" unique_id=1357264219]
+layout_mode = 2
+min_value = 0.5
+max_value = 3.0
+step = 0.1
+value = 1.0
+
+[node name="Label" type="Label" parent="VBox/GridContainer" unique_id=984958098]
+layout_mode = 2
+text = "Time gap"
+
+[node name="HSliderReplayLoop" type="HSlider" parent="VBox/GridContainer" unique_id=1121128112]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 5.0
+step = 0.1
+value = 1.0
+
+[node name="Label2" type="Label" parent="VBox/GridContainer" unique_id=252492472]
+layout_mode = 2
+text = "Wet Dry"
+
+[node name="HSliderDryWet" type="HSlider" parent="VBox/GridContainer" unique_id=353335534]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 0.5
+
+[node name="Label3" type="Label" parent="VBox/GridContainer" unique_id=185623825]
+layout_mode = 2
+text = "Pre Delay"
+
+[node name="HSliderPreDelay" type="HSlider" parent="VBox/GridContainer" unique_id=428743148]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.1
+
+[node name="Label6" type="Label" parent="VBox/GridContainer" unique_id=481047455]
+layout_mode = 2
+text = "Pre Filter"
+
+[node name="HSliderPreFilter" type="HSlider" parent="VBox/GridContainer" unique_id=1246414116]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.85
+
+[node name="Label7" type="Label" parent="VBox/GridContainer" unique_id=755033797]
+layout_mode = 2
+text = "Input Diffusion 1"
+
+[node name="HSliderInputDiffusion1" type="HSlider" parent="VBox/GridContainer" unique_id=448214254]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.75
+
+[node name="Label8" type="Label" parent="VBox/GridContainer" unique_id=814509397]
+layout_mode = 2
+text = "Input Diffusion2"
+
+[node name="HSliderInputDiffusion2" type="HSlider" parent="VBox/GridContainer" unique_id=562003168]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.06
+
+[node name="Label9" type="Label" parent="VBox/GridContainer" unique_id=1707506874]
+layout_mode = 2
+text = "Decay Diffusion"
+
+[node name="HSliderDecayDiffusion" type="HSlider" parent="VBox/GridContainer" unique_id=589689665]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.7
+
+[node name="Label10" type="Label" parent="VBox/GridContainer" unique_id=1933752328]
+layout_mode = 2
+text = "Decay"
+
+[node name="HSliderDecay" type="HSlider" parent="VBox/GridContainer" unique_id=171063145]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.7
+
+[node name="Label4" type="Label" parent="VBox/GridContainer" unique_id=394715468]
+layout_mode = 2
+text = "Damping"
+
+[node name="HSliderDamping" type="HSlider" parent="VBox/GridContainer" unique_id=1881334415]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.95
+
+[node name="StereoButton" type="CheckButton" parent="VBox/GridContainer" unique_id=457606764]
+layout_mode = 2
+button_pressed = true
+text = "Stereo"
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=345919100]
+stream = ExtResource("2_l7b4l")
+max_polyphony = 6
+bus = &"reverbtest"
+
+[node name="Timer" type="Timer" parent="AudioStreamPlayer" unique_id=680733324]
+autostart = true
+
+[node name="AudioStreamPlayer2" type="AudioStreamPlayer" parent="." unique_id=289435764]
+stream = ExtResource("3_l7b4l")
+bus = &"reverbtest"
+
+[connection signal="value_changed" from="VBox/GridContainer/HSliderPitch" to="." method="_on_h_slider_pitch_value_changed"]
+[connection signal="value_changed" from="VBox/GridContainer/HSliderReplayLoop" to="." method="_on_h_slider_replay_loop_value_changed"]
+[connection signal="toggled" from="VBox/GridContainer/StereoButton" to="." method="_on_stereo_button_toggled"]
+[connection signal="timeout" from="AudioStreamPlayer/Timer" to="." method="_on_timer_timeout"]
