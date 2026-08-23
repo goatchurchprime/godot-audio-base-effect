@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://djfejx6setgbr"]
 
 [ext_resource type="AudioStream" uid="uid://bquiekcfluggy" path="res://audiocheck.net_pinknoise.wav" id="1_ig7tw"]
+[ext_resource type="AudioStream" uid="uid://d1lmn4vpkttbl" path="res://steps_rock_01.ogg" id="2_0xm2m"]
 
 [node name="Main" type="Node3D" unique_id=1233391747]
 
@@ -11,3 +12,6 @@ current = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42.50115, 0, -0.43988705)
 stream = ExtResource("1_ig7tw")
 panning_strength = 2.05
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=1816209003]
+stream = ExtResource("2_0xm2m")

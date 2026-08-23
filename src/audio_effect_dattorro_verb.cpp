@@ -35,6 +35,8 @@
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 
+#include <cstdio>
+
 #include "audio_effect_dattorro_verb.h"
 
 #include "dattorro-verb/verb.h"
@@ -111,6 +113,9 @@ void AudioEffectDattorroVerbInstance::_bind_methods() {
 void AudioEffectDattorroVerbInstance::_process(const void *src_buffer, AudioFrame *dst_buffer, int frame_count) {
 	const AudioFrame *p_src_frames = static_cast<const AudioFrame *>(src_buffer);
 
+	if (dry_wet != base->dry_wet)  printf(" drywet change %f \n", dry_wet);
+	dry_wet = CLAMP(base->dry_wet, 0.0, 1.0);
+
 	for (int i = 0; i < frame_count; i++) {
 		// get input
 		float input_left = p_src_frames[i].left;
@@ -120,12 +125,11 @@ void AudioEffectDattorroVerbInstance::_process(const void *src_buffer, AudioFram
 		DattorroVerb_process(reverb_left, input_left);
 		DattorroVerb_process(reverb_right, input_right);
 
-		// get output
+		// get output	
 		float reverb_output_left = DattorroVerb_getLeft(reverb_left);
 		float reverb_output_right = DattorroVerb_getLeft(reverb_right);
 
 		// mix dry and wet signals
-		dry_wet = CLAMP(dry_wet, 0.0, 1.0);
 		float output_left = (1.0 - dry_wet) * input_left + reverb_output_left * dry_wet;
 		float output_right = (1.0 - dry_wet) * input_right + reverb_output_right * dry_wet;
 
@@ -140,9 +144,9 @@ void AudioEffectDattorroVerbInstance::_process(const void *src_buffer, AudioFram
 #pragma region WRAPPER
 
 void AudioEffectDattorroVerb::_bind_methods() {
-	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, FLOAT, gain);
-
-	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, dry_wet)
+    ClassDB::bind_method(D_METHOD("set_dry_wet", "dry_wet"), &AudioEffectDattorroVerb::set_dry_wet);
+    ClassDB::bind_method(D_METHOD("get_dry_wet"), &AudioEffectDattorroVerb::get_dry_wet);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "dry_wet", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_dry_wet", "get_dry_wet");
 
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, pre_delay)
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, pre_filter)
@@ -152,16 +156,6 @@ void AudioEffectDattorroVerb::_bind_methods() {
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, decay_diffusion)
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, damping)
 }
-
-CREATE_GETTER_SETTER(AudioEffectDattorroVerb, double, dry_wet)
-
-// CREATE_GETTER_SETTER(AudioEffectDattorroVerb, double, pre_delay)
-// CREATE_GETTER_SETTER(AudioEffectDattorroVerb, double, pre_filter)
-// CREATE_GETTER_SETTER(AudioEffectDattorroVerb, double, input_diffusion1)
-// CREATE_GETTER_SETTER(AudioEffectDattorroVerb, double, input_diffusion2)
-// CREATE_GETTER_SETTER(AudioEffectDattorroVerb, double, decay_diffusion)
-// CREATE_GETTER_SETTER(AudioEffectDattorroVerb, double, decay)
-// CREATE_GETTER_SETTER(AudioEffectDattorroVerb, double, damping)
 
 double AudioEffectDattorroVerb::get_pre_delay() const { return pre_delay; }
 void AudioEffectDattorroVerb::set_pre_delay(const double p_pre_delay) {
@@ -218,18 +212,13 @@ void AudioEffectDattorroVerb::set_damping(const double p_damping) {
 //
 //
 
-float AudioEffectDattorroVerb::get_gain() const { return gain; };
-void AudioEffectDattorroVerb::set_gain(const float p_gain) {
-	gain = p_gain;
-	if (instance.is_valid()) {
-		instance->gain = gain;
-	}
-};
-
 Ref<AudioEffectInstance> AudioEffectDattorroVerb::_instantiate() {
+
+    //Ref<AudioEffectBaseInstance> ins;
+    //ins.instantiate();
 	instance.instantiate(); // create instnce
-	set_gain(get_gain()); // refresh the gain
-	return instance;
+    instance->base = Ref<AudioEffectDattorroVerb>(this);
+    return instance;
 }
 
 

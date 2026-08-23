@@ -1,0 +1,60 @@
+[gd_scene format=3 uid="uid://et1fj0yues1n"]
+
+[ext_resource type="Script" uid="uid://cpoy2n8jviofd" path="res://reverbtest.gd" id="1_epntm"]
+[ext_resource type="AudioStream" uid="uid://d1lmn4vpkttbl" path="res://steps_rock_01.ogg" id="2_l7b4l"]
+
+[node name="Reverbtest" type="Control" unique_id=915006175]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_epntm")
+
+[node name="VBox" type="VBoxContainer" parent="." unique_id=345196888]
+layout_mode = 0
+offset_right = 467.0
+offset_bottom = 84.0
+
+[node name="HBox" type="HBoxContainer" parent="VBox" unique_id=2082074864]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/HBox" unique_id=984958098]
+layout_mode = 2
+text = "Time gap"
+
+[node name="HSliderReplayLoop" type="HSlider" parent="VBox/HBox" unique_id=1121128112]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 5.0
+step = 0.1
+value = 1.0
+
+[node name="HBox2" type="HBoxContainer" parent="VBox" unique_id=955965216]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBox/HBox2" unique_id=252492472]
+layout_mode = 2
+text = "Wet Dry"
+
+[node name="HSliderDryWet" type="HSlider" parent="VBox/HBox2" unique_id=353335534]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 0.5
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="." unique_id=345919100]
+stream = ExtResource("2_l7b4l")
+max_polyphony = 6
+bus = &"reverbtest"
+
+[node name="Timer" type="Timer" parent="AudioStreamPlayer" unique_id=680733324]
+autostart = true
+
+[connection signal="value_changed" from="VBox/HBox/HSliderReplayLoop" to="." method="_on_h_slider_replay_loop_value_changed"]
+[connection signal="value_changed" from="VBox/HBox2/HSliderDryWet" to="." method="_on_h_slider_dry_wet_value_changed"]
+[connection signal="timeout" from="AudioStreamPlayer/Timer" to="." method="_on_timer_timeout"]
