@@ -1,6 +1,7 @@
 #include "register_types.h"
 
 #include "audio_effect_base.h"
+#include "audio_effect_dattorro_verb.h"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
