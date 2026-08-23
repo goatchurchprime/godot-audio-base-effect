@@ -12,6 +12,7 @@ func _ready():
 	%HSliderDryWet.value_changed.connect(func (v): update_dv())
 	%HSliderPreDelay.value_changed.connect(func (v): update_dv())
 	%HSliderPreFilter.value_changed.connect(func (v): update_dv())
+	%HSliderInputDiffusion1.value_changed.connect(func (v): update_dv())
 	%HSliderDamping.value_changed.connect(func (v): update_dv())
 	update_dv()
 
@@ -19,6 +20,7 @@ func update_dv():
 	dv.dry_wet = %HSliderDryWet.value
 	dv.pre_delay = %HSliderPreDelay.value
 	dv.pre_filter = %HSliderPreFilter.value
+	dv.input_diffusion1 = %HSliderInputDiffusion1.value
 	dv.damping = %HSliderDamping.value
 
 func _on_h_slider_replay_loop_value_changed(value):

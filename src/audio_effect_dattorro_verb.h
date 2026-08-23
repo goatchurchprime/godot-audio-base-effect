@@ -70,6 +70,7 @@ class AudioEffectDattorroVerb : public AudioEffect {
 	double pre_delay = 0.1;
 	double pre_filter = 0.85;
 	double damping = 0.95;
+	double input_diffusion1 = 0.75;
 
 	void set_dry_wet(float ldry_wet) { dry_wet = ldry_wet; };
 	float get_dry_wet() const { return dry_wet; };
@@ -79,9 +80,10 @@ class AudioEffectDattorroVerb : public AudioEffect {
 	float get_pre_filter() const { return pre_filter; };
 	void set_damping(float ldamping) { damping = ldamping; };
 	float get_damping() const { return damping; };
+	void set_input_diffusion1(float linput_diffusion1) { input_diffusion1 = linput_diffusion1; };
+	float get_input_diffusion1() const { return input_diffusion1; };
     
 
-	DECLARE_PROPERTY_DEFAULT(double, input_diffusion1, 0.75)
 	DECLARE_PROPERTY_DEFAULT(double, input_diffusion2, 0.0625)
 	DECLARE_PROPERTY_DEFAULT(double, decay_diffusion, 0.7)
 	DECLARE_PROPERTY_DEFAULT(double, decay, 0.75)
@@ -120,8 +122,8 @@ public:
 	double pre_delay = 0.1;
 	double pre_filter = 0.85;
 	double damping = 0.95;
+	double input_diffusion1 = 0.75;
 
-	DECLARE_PROPERTY_DEFAULT(double, input_diffusion1, 0.75)
 	DECLARE_PROPERTY_DEFAULT(double, input_diffusion2, 0.0625)
 	DECLARE_PROPERTY_DEFAULT(double, decay_diffusion, 0.7)
 	DECLARE_PROPERTY_DEFAULT(double, decay, 0.75)

@@ -61,12 +61,6 @@ AudioEffectDattorroVerbInstance::~AudioEffectDattorroVerbInstance() {
 	}
 }
 
-double AudioEffectDattorroVerbInstance::get_input_diffusion1() const { return input_diffusion1; }
-void AudioEffectDattorroVerbInstance::set_input_diffusion1(const double p_input_diffusion1) {
-	input_diffusion1 = p_input_diffusion1;
-	DattorroVerb_setInputDiffusion1(reverb_left, input_diffusion1);
-	DattorroVerb_setInputDiffusion1(reverb_right, input_diffusion1);
-}
 double AudioEffectDattorroVerbInstance::get_input_diffusion2() const { return input_diffusion2; }
 void AudioEffectDattorroVerbInstance::set_input_diffusion2(const double p_input_diffusion2) {
 	input_diffusion2 = p_input_diffusion2;
@@ -110,6 +104,11 @@ void AudioEffectDattorroVerbInstance::_process(const void *src_buffer, AudioFram
 		damping = base->damping;
 		DattorroVerb_setDamping(reverb_left, damping);
 		DattorroVerb_setDamping(reverb_right, damping);
+	}
+	if (input_diffusion1 != base->input_diffusion1) {
+		input_diffusion1 = base->input_diffusion1;
+		DattorroVerb_setInputDiffusion1(reverb_left, input_diffusion1);
+		DattorroVerb_setInputDiffusion1(reverb_right, input_diffusion1);
 	}
 	
 
@@ -158,18 +157,13 @@ void AudioEffectDattorroVerb::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_pre_filter"), &AudioEffectDattorroVerb::get_pre_filter);
     ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "pre_filter", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_pre_filter", "get_pre_filter");
 
-	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, input_diffusion1)
+    ClassDB::bind_method(D_METHOD("set_input_diffusion1", "input_diffusion1"), &AudioEffectDattorroVerb::set_input_diffusion1);
+    ClassDB::bind_method(D_METHOD("get_input_diffusion1"), &AudioEffectDattorroVerb::get_input_diffusion1);
+    ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "input_diffusion1", PROPERTY_HINT_RANGE, "0.0,1.0,0.01"), "set_input_diffusion1", "get_input_diffusion1");
+
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, input_diffusion2)
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, decay)
 	CREATE_VAR_BINDINGS(AudioEffectDattorroVerb, Variant::FLOAT, decay_diffusion)
-}
-
-double AudioEffectDattorroVerb::get_input_diffusion1() const { return input_diffusion1; }
-void AudioEffectDattorroVerb::set_input_diffusion1(const double p_input_diffusion1) {
-	input_diffusion1 = p_input_diffusion1;
-	if (instance.is_valid()) {
-		instance->set_input_diffusion1(input_diffusion1);
-	}
 }
 double AudioEffectDattorroVerb::get_input_diffusion2() const { return input_diffusion2; }
 void AudioEffectDattorroVerb::set_input_diffusion2(const double p_input_diffusion2) {
